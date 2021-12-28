@@ -56,7 +56,7 @@ Prepare Python virtual environment:
 apt-get install python3-venv python3-pip
 python3 -m venv venv
 source .venv/bin/activate
-pip install tox textfsm
+pip install tox textfsm ntc_templates pyyaml
 ~~~
 
 Manual test with a simple Python script:
