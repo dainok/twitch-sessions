@@ -34,6 +34,12 @@ Merge latest changes:
 git rebase upstream/master
 ~~~
 
+Update GitHub repository:
+
+~~~
+git push origin master --force
+~~~
+
 ## Make changes
 
 Create a new branch:
@@ -66,9 +72,9 @@ import textfsm
 import json
 
 template_file = 'ntc_templates/templates/hp_procurve_show_mac-address.textfsm'
-raw_output = 'tests/hp_procurve/show_mac-address/hp_procurve_show_mac-address2.raw'
+raw_output_file = 'tests/hp_procurve/show_mac-address/hp_procurve_show_mac-address2.raw'
 
-with open(template_file) as fd_t, open(raw_output) as fd_o:
+with open(template_file) as fd_t, open(raw_output_file) as fd_o:
 	re_table = textfsm.TextFSM(fd_t)
 	parsed_header = re_table.header
 	parsed_output = re_table.ParseText(fd_o.read())
