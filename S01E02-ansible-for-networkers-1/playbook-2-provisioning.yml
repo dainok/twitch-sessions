@@ -1,0 +1,42 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: cisco_ios
+  gather_facts: false
+
+  pre_tasks:
+  - name: get running-config
+    connection: network_cli
+    cisco.ios.ios_command:
+      commands:
+      - show running-config
+    register: get_running_config
+    tags: always
+
+  # - name: print output
+  #   debug:
+  #     var: get_running_config
+
+  - name: extract running-config
+    set_fact:
+      running_config: "{{get_running_config.stdout | join('')}}"
+    tags: always
+
+  # - name: print running-config
+  #   debug:
+  #     var: running_config
+
+  tasks:
+  - name: setting timezone
+    connection: network_cli
+    cisco.ios.ios_config:
+      lines:
+      - clock timezone GMT 0 0
+      - clock summer-time CEST recurring last Sun Mar 2:00 last Sun Oct 3:00
+      running_config: "{{running_config}}"
+      diff_against: startup
+
+  - name: save the configuration if it has been modified
+    connection: network_cli
+    cisco.ios.ios_config:
+      diff_against: startup
+      save_when: modified

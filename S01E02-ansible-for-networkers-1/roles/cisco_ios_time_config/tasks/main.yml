@@ -1,0 +1,32 @@
+---
+# tasks file for roles/cisco_ios_time_config
+- name: setting timezone
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+    - "clock timezone {{time['timezone']}}"
+    - "clock summer-time {{time['summertime']}}"
+    running_config: "{{running_config}}"
+  notify: save_config
+
+- name: get configured NTP servers
+  set_fact:
+    current_servers: "{{ running_config | regex_findall('^ntp server .*$', multiline=True) | regex_replace('ntp server ', '')}}"
+
+- name: removing NTP servers
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+    - "no ntp server {{item}}"
+  with_items: "{{current_servers}}"
+  when: time['servers'] is defined and item not in time['servers']
+  notify: save_config
+
+
+- name: setting NTP servers
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+    - "ntp server {{item}}"
+  with_items: "{{time['servers']}}"
+  notify: save_config

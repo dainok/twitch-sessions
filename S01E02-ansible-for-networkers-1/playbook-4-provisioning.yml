@@ -1,0 +1,33 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: cisco_ios
+  gather_facts: false
+  vars_files:
+  - config.yml
+
+  pre_tasks:
+  - name: get running-config
+    connection: network_cli
+    cisco.ios.ios_command:
+      commands:
+      - show running-config
+    register: get_running_config
+    tags: always
+
+  - name: extract running-config
+    set_fact:
+      running_config: "{{get_running_config.stdout | join('')}}"
+    tags: always
+
+  roles:
+  - role: cisco_ios_time_config
+    tags: time
+
+  handlers:
+  - name: save_config
+    connection: network_cli
+    cisco.ios.ios_config:
+      diff_against: startup
+      save_when: modified
+    tags: always
+    when: not ansible_check_mode

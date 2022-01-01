@@ -1,0 +1,10 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: cisco_ios
+  gather_facts: true
+
+  tasks:
+  - name: check the startup-config against the running-config
+    connection: network_cli
+    cisco.ios.ios_config:
+      diff_against: startup
