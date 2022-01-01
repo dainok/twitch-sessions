@@ -7,9 +7,9 @@ git config --global user.email "andrea.dainese@pm.me"
 git config --global user.name "Andrea Dainese"
 ~~~
 
-## Fork, clone, update and merge lastest changes
+## Fork, clone, update and merge latest changes
 
-Fork the [NTC-Templates GitHub repository](https://github.com/networktocode/ntc-templates) via web and clone the repositoy locally:
+Fork the [NTC-Templates GitHub repository](https://github.com/networktocode/ntc-templates) via web and clone the repository locally:
 
 ~~~
 git clone https://github.com/dainok/ntc-templates
