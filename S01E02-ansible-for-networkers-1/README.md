@@ -75,6 +75,7 @@ See attaches `hosts` file and customize it.
 Test inventory and hosts connectivity:
 
 ~~~
+ansible -i hosts --list-hosts all
 ansible -i hosts all -m ping
 ~~~
 
