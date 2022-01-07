@@ -1,0 +1,16 @@
+---
+# GEt device name
+- name: get device name
+  set_fact:
+    device: "{{inventory_hostname}}"
+
+# For each interface of each device defined in config_ports.yml execute per_interfaces_task.yml
+- block:
+  - debug:
+      msg: "HERE"
+  - include_tasks: per_interface_task.yml file={{outer_item}}
+    when: outer_item | length > 0
+    with_items: "{{devices[device]}}"
+    loop_control:
+      loop_var: outer_item
+  when: device in devices

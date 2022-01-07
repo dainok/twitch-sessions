@@ -1,0 +1,85 @@
+---
+# General hardening configurations
+- name: hardening
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+    - service timestamps log datetime msec localtime show-timezone
+    - service password-encryption
+    - service tcp-keepalives-in
+    - service tcp-keepalives-out
+    - logging buffered 65536 informational
+    - ip cef
+    - ip ssh version 2
+    - ip ssh time-out 60
+    - ip ssh authentication-retries 2
+    - ip scp server enable
+    - no ip http server
+    - no ip http secure-server
+    - no ip source-route
+    running_config: "{{running_config}}"
+
+# Disabling AutoInstall
+- name: get autoinstall status
+  set_fact:
+    current_lookup: "{{ running_config | regex_findall('^service config', multiline=True) | join('\n')}}"
+
+- name: disabling autoinstall
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - "no service config"
+    running_config: "{{running_config}}"
+  when: current_lookup != ''
+
+# Hardening console
+- name: hardening console
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - exec-timeout 5 0
+    parents: line con 0
+    running_config: "{{running_config}}"
+
+# Hardening AUX
+- name: get AUX line
+  set_fact:
+      current_aux: "{{ running_config | regex_findall('^line aux .*', multiline=True)}}"
+
+- name: hardening aux
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - transport output none
+      - no exec
+      - exec-timeout 0 1
+    parents: "{{item}}"
+    running_config: "{{running_config}}"
+  with_items: "{{current_aux}}"
+
+# Hardening VTYs
+- name: get VTY lines
+  set_fact:
+    current_vtys: "{{ running_config | regex_findall('^line vty .*', multiline=True)}}"
+
+- name: hardening VTYs
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - transport input ssh
+      - exec-timeout 5 0
+    parents: "{{item}}"
+    running_config: "{{running_config}}"
+  with_items: "{{current_vtys}}"
+
+# Configuring console audit
+- name: configuring console auditing
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - logging enable
+      - logging size 200
+      - hidekeys
+      - notify syslog contenttype plaintext
+    parents: ["archive", "log config"]
+    running_config: "{{running_config}}"

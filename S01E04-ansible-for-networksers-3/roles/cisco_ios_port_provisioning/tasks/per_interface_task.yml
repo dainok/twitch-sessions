@@ -1,0 +1,87 @@
+---
+# Save desiderata interface configuration (from port-config.yml)
+- name: save desiderata interface configuration
+  set_fact:
+    interface: "{{outer_item}}"
+
+# Prepare vars
+- name: prepare vars
+  set_fact:
+    if_name: "{{interface.interface}}"
+    if_descr: "{{interface.customer}}"
+    if_enabled: "{{interface.enabled}}"
+    internet: "{{interface.internet}}"
+    voice: "{{interface.voice}}"
+
+# Disabling the interface
+- name: "disabling interface {{device}}:{{if_name}}"
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - "shutdown"
+    parents: "interface {{if_name}}"
+    before: "default interface {{if_name}}"
+    running_config: "{{running_config}}"
+    match: exact
+  when: not if_enabled
+
+- block:
+  # Configuring policy-map names
+  - set_fact:
+      policy_in: "PM_IN_VOICE_{{voice.split('_')[1]}}_INTERNET_{{internet.split('_')[1]}}"
+      policy_in_voice: "PM_POLICE_{{voice.split('_')[1]}}_COS5"
+      policy_in_internet: "PM_POLICE_{{internet.split('_')[1]}}_COS1"
+      policy_out: "PM_OUT_VOICE_{{voice.split('_')[0]}}_INTERNET_{{internet.split('_')[0]}}"
+      policy_out_voice: "PM_POLICE_{{voice.split('_')[0]}}_COS5"
+      policy_out_internet: "PM_POLICE_{{internet.split('_')[0]}}_COS1"
+
+  # Configuring input voice policy
+  - name: "configuring input voice policy {{policy_in_voice}} on {{device}}"
+    connection: network_cli
+    cisco.ios.ios_config:
+      lines:
+        - "service-policy {{policy_in_voice}}"
+      parents: ["policy-map {{policy_in}}", "class CL_MATCH_COS5"]
+      running_config: "{{running_config}}"
+
+  # Configuring output voice policy
+  - name: "configuring output voice policy {{policy_out_voice}} on {{device}}"
+    connection: network_cli
+    cisco.ios.ios_config:
+      lines:
+        - "service-policy {{policy_out_voice}}"
+      parents: ["policy-map {{policy_out}}", "class CL_MATCH_COS5"]
+      running_config: "{{running_config}}"
+  
+  # Configuring input internet policy
+  - name: "configuring input Internet policy {{policy_in_internet}} on {{device}}"
+    connection: network_cli
+    cisco.ios.ios_config:
+      lines:
+        - "service-policy {{policy_in_internet}}"
+      parents: ["policy-map {{policy_in}}", "class CL_MATCH_COS1"]
+      running_config: "{{running_config}}"
+
+  # Configuring output internet policy
+  - name: "configuring output Internet policy {{policy_out_internet}} on {{device}}"
+    connection: network_cli
+    cisco.ios.ios_config:
+      lines:
+        - "service-policy {{policy_out_internet}}"
+      parents: ["policy-map {{policy_out}}", "class CL_MATCH_COS1"]
+      running_config: "{{running_config}}"
+
+  # Configuring interface (description, input and output policy)
+  - name: "configuring {{device}}:{{if_name}}"
+    connection: network_cli
+    cisco.ios.ios_config:
+      lines:
+        - "switchport"
+        - "description {{if_descr}}"
+        - "service-policy input {{policy_in}}"
+        - "service-policy output {{policy_out}}"
+      running_config: "{{running_config}}"
+      parents: "interface {{if_name}}"
+      after: "no shutdown"
+
+  when: if_enabled

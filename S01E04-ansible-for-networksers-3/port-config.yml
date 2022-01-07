@@ -1,0 +1,8 @@
+---
+devices:
+  r1.example.com:
+    - interface: Ethernet0/1
+      enabled: True
+      voice: 500K_500K
+      internet: 100M_10M
+      customer: "000123"

@@ -1,0 +1,8 @@
+---
+# Saving configuration only if needed (replace the "notify: save_config")
+- name: saving configuration
+  connection: network_cli
+  cisco.ios.ios_config:
+    diff_against: startup
+    save_when: modified
+  when: not ansible_check_mode

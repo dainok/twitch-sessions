@@ -2,4 +2,4 @@
 
 The `qos-policies.yml` file describes the model used in this example. That file is used to build QoS policies by the `cisco_ios_qos` role.
 
-See previous session also.
+The playbook configure all standard policy-map used by a provisioning playbook developed in the next episode.

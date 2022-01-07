@@ -1,0 +1,22 @@
+---
+dns:
+  domain: example.com
+  lookup: true
+  servers:
+  - 8.8.8.8
+  - 8.8.4.4
+
+time:
+  timezone: CET 1 0
+  summertime: CEST recurring last Sun Mar 2:00 last Sun Oct 3:00
+  servers:
+  - 0.it.pool.ntp.org
+  - 1.it.pool.ntp.org
+  - 2.it.pool.ntp.org
+  - 3.it.pool.ntp.org
+
+snmp:
+  contact: Someone
+  location: NoWhere
+  communities:
+    - romanagement RO

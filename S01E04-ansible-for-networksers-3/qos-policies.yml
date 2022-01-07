@@ -1,0 +1,22 @@
+---
+voice_profiles:
+- 500K_500K
+- 5M_5M
+- 10M_10M
+
+internet_profiles:
+  - 10M_1M
+  - 10M_10M
+  - 100M_10M
+  - 100M_100M
+
+cir:
+  500K: 512000 bc 56250
+  1M: 1000000 bc 112500
+  5M: 5000000 bc 562500
+  10M: 11034000 bc 344812
+  100M: 110000000 bc 1000000
+
+class_maps:
+  CL_MATCH_COS1: cos  1
+  CL_MATCH_COS5: cos  5

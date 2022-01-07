@@ -1,0 +1,86 @@
+---
+# Configuring global SNMP settings
+- name: configuring global SNMP settings
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - snmp-server ifindex persist
+    running_config: "{{running_config}}"
+
+# Configuring SNMP location
+- name: configuring SNMP location
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - "snmp-server location {{snmp['location']}}"
+    running_config: "{{running_config}}"
+  when: snmp is defined and snmp['location'] is defined
+
+# Removing SNMP location
+- name: get current SNMP location
+  set_fact:
+    current_location: "{{ running_config | regex_findall('^snmp-server location .*$', multiline=True) | join('\n')}}"
+
+- name: removing SNMP location
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - "no snmp-server location"
+    running_config: "{{running_config}}"
+  when: (snmp is not defined or snmp['location'] is not defined) and current_location != ''
+
+# Configuring SNMP contact
+- name: configuring SNMP contact
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - "snmp-server contact {{snmp['contact']}}"
+    running_config: "{{running_config}}"
+  when: snmp is defined and snmp['contact'] is defined
+
+# Removing SNMP contact
+- name: get current SNMP contact
+  set_fact:
+    current_contact: "{{ running_config | regex_findall('^snmp-server contact .*$', multiline=True) | join('\n')}}"
+
+- name: removing SNMP contact
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - "no snmp-server contact"
+    running_config: "{{running_config}}"
+  when: (snmp is not defined or snmp['contact'] is not defined) and current_contact != ''
+
+# Configuring SNMP communities
+- name: configuring SNMP communities
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - "snmp-server community {{item}}"
+    running_config: "{{running_config}}"
+  with_items: "{{snmp['communities']}}"
+  when: snmp is defined and snmp['communities'] is defined
+
+# Removing SNMP communities
+- name: get current SNMP communities
+  set_fact:
+    current_communities: "{{ running_config | regex_findall('^snmp-server community .*$', multiline=True) | regex_replace('snmp-server community ', '')}}"
+
+- name: removing SNMP communities
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - "no snmp-server community {{item}}"
+    running_config: "{{running_config}}"
+  with_items: "{{current_communities}}"
+  when: (snmp is defined and snmp['communities'] is defined) and item not in snmp['communities']
+
+# Configuring SNMP trap receivers
+- name: configuring SNMP trap receivers
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - "snmp-server community {{item}}"
+    running_config: "{{running_config}}"
+  with_items: "{{snmp['communities']}}"
+  when: snmp is defined and snmp['communities'] is defined

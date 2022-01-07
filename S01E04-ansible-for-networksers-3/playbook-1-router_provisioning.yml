@@ -1,0 +1,35 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: cisco_ios
+  gather_facts: false
+  vars_files:
+  - config.yml
+  - qos-policies.yml
+
+  pre_tasks:
+  - name: get running-config
+    connection: network_cli
+    cisco.ios.ios_command:
+      commands:
+      - show running-config
+    register: get_running_config
+    tags: always
+
+  - name: extract running-config
+    set_fact:
+      running_config: "{{get_running_config.stdout | join('')}}"
+    tags: always
+
+  roles:
+  - role: cisco_ios_dns_config
+    tags: base,dns
+  - role: cisco_ios_time_config
+    tags: base,time
+  - role: cisco_ios_hardening
+    tags: base,security
+  - role: cisco_ios_snmp_config
+    tags: base,snmp
+  - role: cisco_ios_qos
+    tags: qos
+  - role: cisco_ios_save_config
+    tags: all
