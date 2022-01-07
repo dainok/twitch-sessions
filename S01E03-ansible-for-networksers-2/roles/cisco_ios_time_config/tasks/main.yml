@@ -1,0 +1,62 @@
+---
+# Configuring timezone
+- name: setting timezone
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+    - "clock timezone {{time['timezone']}}"
+    running_config: "{{running_config}}"
+  when: time is defined and time['timezone'] is defined
+
+# Configuring default timezone
+- name: setting default timezone
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+    - "clock timezone GMT 0 0"
+    running_config: "{{running_config}}"
+  when: time is not defined or time['timezone'] is not defined
+
+# Configuring daylight saving time
+- name: setting daylight saving time
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+    - "clock summer-time {{time['summertime']}}"
+    running_config: "{{running_config}}"
+  when: time is defined and time['summertime'] is defined
+
+# Configuring default daylight saving time
+- block:
+  - name: get configured daylight saving time
+    set_fact:
+        current_summertime: "{{ running_config | regex_findall('^clock summer-time .*$', multiline=True) | join('\n')}}"
+  - name: removing configured daylight saving time
+    connection: network_cli
+    cisco.ios.ios_config:
+      lines:
+      - "no clock summer-time"
+      running_config: "{{running_config}}"
+    when: current_summertime != ''
+  when: time is not defined or time['summertime'] is not defined
+
+# Configuring NTP servers
+- name: setting NTP servers
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+    - "ntp server {{item}}"
+  with_items: "{{time['servers']}}"
+
+# Removing NTP servers
+- name: get configured NTP servers
+  set_fact:
+    current_servers: "{{ running_config | regex_findall('^ntp server .*$', multiline=True) | regex_replace('ntp server ', '')}}"
+
+- name: removing NTP servers
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+    - "no ntp server {{item}}"
+  with_items: "{{current_servers}}"
+  when: time['servers'] is defined and item not in time['servers']

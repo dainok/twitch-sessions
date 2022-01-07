@@ -1,0 +1,64 @@
+---
+# Configuring DNS domain
+- name: configuring dns domain
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+    - "ip domain name {{dns['domain']}}"
+    running_config: "{{running_config}}"
+  when: dns is defined and dns['domain'] is defined
+
+# Configuring a default domain
+- name: setting default dns domain
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+    - "ip domain name example.com"
+    running_config: "{{running_config}}"
+  when: dns is not defined or dns['domain'] is not defined
+
+# Configuring DNS lookup
+- name: get current DNS lookup configuration
+  set_fact:
+    current_lookup: "{{ running_config | regex_findall('^no ip domain lookup', multiline=True) | join('\n')}}"
+
+- name: enabling DNS lookup configuration
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - "ip domain lookup"
+    running_config: "{{running_config}}"
+  when: dns is defined and dns['lookup'] is defined and dns['lookup'] and current_lookup != ''
+
+# Disabling DNS lookup
+- name: disabling DNS lookup
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - "no ip domain lookup"
+    running_config: "{{running_config}}"
+  when: dns is not defined or dns['lookup'] is not defined or not dns['lookup']
+
+# Configuring DNS servers
+- name: configuring DNS servers
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - "ip name-server {{item}}"
+    running_config: "{{running_config}}"
+  with_items: "{{dns['servers']}}"
+  when: dns is defined and dns['servers'] is defined
+
+# Removing DNS servers
+- name: get configured DNS servers
+  set_fact:
+    current_servers: "{{ running_config | regex_findall('^ip name-server .*$', multiline=True) | regex_replace('ip name-server ', '')}}"
+
+- name: removing DNS servers
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - "no ip name-server {{item}}"
+    running_config: "{{running_config}}"
+  with_items: "{{current_servers}}"
+  when: (dns is defined and dns['servers'] is defined) and item not in dns['servers']

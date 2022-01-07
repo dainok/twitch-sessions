@@ -1,0 +1,59 @@
+---
+# Build polciers list (VOICE)
+- name: build policer list (VOICE)
+  set_fact:
+    voice_policers: "{{voice_profiles | regex_replace('[0-9KM]+_', '')}}"
+
+- name: clean policer list (VOICE)
+  set_fact:
+    voice_policers: "{{voice_policers | sort() | unique()}}"
+
+# Build polciers list (INTERNET)
+- name: build policer list (INTERNET)
+  set_fact:
+    internet_policers: "{{internet_profiles | regex_replace('[0-9KM]+_', '')}}"
+
+- name: clean policer list (INTERNET)
+  set_fact:
+    internet_policers: "{{internet_policers | sort() | unique()}}"
+
+# Configuring class-map
+- name: configuring class-map
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - "match {{item.value}}"
+    parents: "class-map match-any {{item.key}}"
+    running_config: "{{running_config}}"
+  with_dict: "{{class_maps}}"
+
+# Configuring input policies (VOICE)
+- name: configuring input policies (VOICE)"
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - "police cir {{cir[item]}} conform-action set-cos-transmit 5"
+    parents: ["policy-map PM_POLICE_{{item}}_COS5", "class class-default"]
+    running_config: "{{running_config}}"
+  with_items: "{{voice_policers}}"
+
+# Configuring input policies (INTERNET)
+- name: configuring input policies (INTERNET)"
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - "police cir {{cir[item]}} conform-action set-cos-transmit 1"
+    parents: ["policy-map PM_POLICE_{{item}}_COS1", "class class-default"]
+    running_config: "{{running_config}}"
+  with_items: "{{internet_policers}}"
+
+# Configuring input policies (MANAGEMENT)
+- name: configuring input policies (MANAGEMENT)"
+  connection: network_cli
+  cisco.ios.ios_config:
+    lines:
+      - "police cir {{cir[item]}} conform-action set-cos-transmit 6"
+    parents: ["policy-map PM_POLICE_{{item}}_COS6", "class class-default"]
+    running_config: "{{running_config}}"
+  with_items:
+    - 1M
