@@ -5,10 +5,10 @@ voice_profiles:
 - 10M_10M
 
 internet_profiles:
-  - 10M_1M
-  - 10M_10M
-  - 100M_10M
-  - 100M_100M
+- 10M_1M
+- 10M_10M
+- 100M_10M
+- 100M_100M
 
 cir:
   500K: 512000 bc 56250

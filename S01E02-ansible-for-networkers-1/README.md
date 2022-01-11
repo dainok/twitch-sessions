@@ -35,7 +35,7 @@ ip domain name example.com
 username admin privilege 15 password 0 cisco
 crypto key generate rsa modulus 1024
 ip ssh version 2
-interface Ethernet0
+interface Ethernet0/0
  ip address dhcp
 line vty 0 4
  login local
