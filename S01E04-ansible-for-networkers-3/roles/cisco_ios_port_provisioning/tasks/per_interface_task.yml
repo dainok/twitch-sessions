@@ -76,7 +76,6 @@
     connection: network_cli
     cisco.ios.ios_config:
       lines:
-        - "switchport"
         - "description {{if_descr}}"
         - "service-policy input {{policy_in}}"
         - "service-policy output {{policy_out}}"

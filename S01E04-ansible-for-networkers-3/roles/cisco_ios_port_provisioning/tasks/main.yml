@@ -6,11 +6,9 @@
 
 # For each interface of each device defined in config_ports.yml execute per_interfaces_task.yml
 - block:
-  - debug:
-      msg: "HERE"
-  - include_tasks: per_interface_task.yml file={{outer_item}}
+  - include_tasks: per_interface_task.yml
     when: outer_item | length > 0
-    with_items: "{{devices[device]}}"
+    with_items: "{{devices[device]}}" # Looping through the interfaces of the device
     loop_control:
-      loop_var: outer_item
-  when: device in devices
+      loop_var: outer_item # Inner loop is overwriting the item variable, it's saved into outer_item
+  when: device in devices # The task is included only when the current device is present in the post-config.yml file
