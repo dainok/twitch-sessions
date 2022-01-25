@@ -1,0 +1,23 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: panw_panos
+  gather_facts: false
+  connection: local
+
+  tasks:
+  - name: setting provider
+    set_fact:      
+      provider:
+        ip_address: "{{ansible_host}}"
+        password: "{{ansible_password}}"
+        username: "{{ansible_user}}"
+
+  - name: get system info
+    paloaltonetworks.panos.panos_op:
+      provider: "{{provider}}"
+      cmd: "show system info"
+    register: system_info
+    changed_when: false
+
+  - debug:
+      msg: "{{system_info.stdout}}"

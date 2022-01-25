@@ -1,0 +1,25 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: panw_panos
+  gather_facts: false
+  connection: local
+
+  tasks:
+  - name: setting provider
+    set_fact:      
+      provider:
+        ip_address: "{{ansible_host}}"
+        password: "{{ansible_password}}"
+        username: "{{ansible_user}}"
+
+  - name: get ARP table
+    paloaltonetworks.panos.panos_op:
+      provider: "{{provider}}"
+      # cmd: 'show arp management' # Fails with "show -> arp has unexpected text."
+      cmd: "<show><arp><entry name='management'/></arp></show>"
+      cmd_is_xml: true
+    register: arp_info
+    changed_when: false
+
+  - debug:
+      msg: "{{arp_info.stdout}}"

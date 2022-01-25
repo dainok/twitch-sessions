@@ -1,0 +1,13 @@
+---
+dns:
+  domain: example.com
+  lookup: true
+  servers:
+  - 8.8.8.8
+  - 8.8.4.4
+
+time:
+  timezone: Europe/Rome
+  servers:
+  - 0.it.pool.ntp.org
+  - 1.it.pool.ntp.org

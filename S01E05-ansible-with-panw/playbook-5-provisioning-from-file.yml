@@ -1,0 +1,42 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: panw_panos 
+  gather_facts: true
+  connection: local
+  vars_files:
+  - config.yml
+
+  handlers:
+  - name: commit
+    paloaltonetworks.panos.panos_commit_firewall:
+      provider: '{{ provider }}'
+
+  tasks:
+  - name: setting provider
+    set_fact:      
+      provider:
+        ip_address: "{{ansible_host}}"
+        password: "{{ansible_password}}"
+        username: "{{ansible_user}}"
+
+  - name: create configuration file
+    template:
+      src: running-config.xml.j2
+      dest: "{{inventory_hostname_short}}-{{ansible_date_time['date']}}.xml" # Requires gather facts
+    delegate_to: localhost
+
+  - name: import configuration file
+    paloaltonetworks.panos.panos_import:
+      file: "{{inventory_hostname_short}}-{{ansible_date_time['date']}}.xml"
+      category: 'configuration'
+      provider: "{{provider}}"
+    register: import_cfg
+
+  - name: load configuration file
+    paloaltonetworks.panos.panos_loadcfg:
+      file: '{{ import_cfg.filename }}'
+      ip_address: "{{provider['ip_address']}}"
+      password: "{{provider['password']}}"
+      username: "{{provider['username']}}"
+      commit: false
+    notify: commit

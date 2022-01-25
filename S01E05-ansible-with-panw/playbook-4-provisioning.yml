@@ -1,0 +1,60 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: panw_panos
+  gather_facts: false
+  connection: local
+  vars_files:
+  - config.yml
+
+  handlers:
+  - name: commit
+    paloaltonetworks.panos.panos_commit_firewall:
+      provider: '{{ provider }}'
+
+  tasks:
+  - name: setting provider
+    set_fact:      
+      provider:
+        ip_address: "{{ansible_host}}"
+        password: "{{ansible_password}}"
+        username: "{{ansible_user}}"
+        # api_key: "LUFRPT04NTRhczBpRURoNnVuYjk0eStsZEgyVlhOdkE9dSt3ZVI1YnBGelROQlk1bjBRTk5UV2JsdDIyS2JhYVdqWnM0RHhYNzBYTFRHVGR4TnA4TkluYkUrd01kdnIyUw=="
+
+  - name: get system info
+    paloaltonetworks.panos.panos_op:
+      provider: "{{provider}}"
+      cmd: "show system info"
+    register: system_info
+    changed_when: false
+
+  - set_fact:
+      system_info_response: "{{system_info.stdout}}"
+
+  - name: display UUID
+    debug:
+      msg: "UUID: {{system_info_response['response']['result']['system']['vm-uuid']}}"
+
+  - name: display CPU ID
+    debug:
+      msg: "CPUID: {{system_info_response['response']['result']['system']['vm-cpuid']}}"
+
+  - name: configuring
+    paloaltonetworks.panos.panos_mgtconfig:
+      provider: '{{provider}}'
+      dns_server_primary: "{{dns['servers'][0]}}"
+      dns_server_secondary: "{{dns['servers'][1]}}"
+      ntp_server_primary: "{{time['servers'][0]}}"
+      ntp_server_secondary: "{{time['servers'][0]}}"
+      domain: example.com
+      hostname: fw
+    notify: commit
+
+  - name: retrieve api_key
+    paloaltonetworks.panos.panos_api_key:
+      provider: '{{ provider }}'
+    register: auth
+
+  - name: display API key
+    debug:
+      msg: '{{ auth.api_key }}'
+

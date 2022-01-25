@@ -1,0 +1,9 @@
+all:
+  hosts:
+    fw.example.com:
+      ansible_host: 192.168.28.156
+      ansible_password: Passw0rd!
+      ansible_user: admin
+panw_panos:
+  hosts:
+    fw.example.com:

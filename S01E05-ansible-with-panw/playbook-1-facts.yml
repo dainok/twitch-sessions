@@ -1,0 +1,21 @@
+#!/usr/bin/env ansible-playbook
+---
+- hosts: panw_panos
+  gather_facts: false
+  connection: local
+
+  tasks:
+  - name: setting provider
+    set_fact:      
+      provider:
+        ip_address: "{{ansible_host}}"
+        password: "{{ansible_password}}"
+        username: "{{ansible_user}}"
+
+  - name: get facts
+    paloaltonetworks.panos.panos_facts:
+      provider: "{{provider}}"
+
+  - name: display facts
+    debug:
+      msg: "Model: {{ ansible_facts['net_model'] }}, version: {{ ansible_facts['net_version'] }}"
