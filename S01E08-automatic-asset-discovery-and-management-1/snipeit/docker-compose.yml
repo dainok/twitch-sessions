@@ -1,0 +1,51 @@
+---
+# https://snipe-it.readme.io/docs/docker
+# https://github.com/snipe/snipe-it/releases
+# docker-compose --env-file local.env up -d
+# docker-compose logs -t -f
+version: '3.7'
+services:
+
+
+  snipeit-app:
+    image: snipe/snipe-it:${SNIPEIT_VERSION:-latest}
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+    ports:
+      - 8090:80
+    env_file:
+      - "local.env"
+    environment:
+      APP_ENV: "${SNIPEIT_APP_ENV}"
+      APP_DEBUG: "${SNIPEIT_APP_DEBUG}"
+      APP_KEY: "${SNIPEIT_APP_KEY}"
+      APP_URL: "${SNIPEIT_APP_URL}"
+      APP_TIMEZONE: "${SNIPEIT_APP_TIMEZONE}"
+      APP_LOCALE: "${SNIPEIT_APP_LOCALE}"
+      MYSQL_PORT_3306_TCP_ADDR: "${SNIPEIT_DB_HOST}"
+      MYSQL_PORT_3306_TCP_PORT: 3306
+      MYSQL_DATABASE: "${SNIPEIT_DB_NAME}"
+      MYSQL_USER: "${SNIPEIT_DB_USER}"
+      MYSQL_PASSWORD: "${SNIPEIT_DB_PASSWORD}"
+      MAIL_PORT_587_TCP_ADDR: "${SNIPEIT_MAIL_PORT_587_TCP_ADDR}"
+      MAIL_PORT_587_TCP_PORT: "${SNIPEIT_MAIL_PORT_587_TCP_PORT}"
+      MAIL_ENV_FROM_ADDR: "${SNIPEIT_MAIL_ENV_FROM_ADDR}"
+      MAIL_ENV_FROM_NAME: "${SNIPEIT_MAIL_ENV_FROM_NAME}"
+      MAIL_ENV_ENCRYPTION: "${SNIPEIT_MAIL_ENV_ENCRYPTION}"
+      MAIL_ENV_USERNAME: "${SNIPEIT_MAIL_ENV_USERNAME}"
+      MAIL_ENV_PASSWORD: "${SNIPEIT_MAIL_ENV_PASSWORD}"
+
+
+  mariadb:
+    image: mariadb:${MARIADB_VERSION}
+    restart: unless-stopped
+    volumes:
+      - ${MARIADB_VOLUME}/data:/var/lib/mysql/data
+      - ${MARIADB_VOLUME}/logs:/var/lib/mysql/logs
+      - ${MARIADB_VOLUME}/conf:/etc/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "${SNIPEIT_DB_NAME}"
+      MYSQL_USER: "${SNIPEIT_DB_USER}"
+      MYSQL_PASSWORD: "${SNIPEIT_DB_PASSWORD}"

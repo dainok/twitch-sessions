@@ -1,0 +1,79 @@
+---
+# https://github.com/nautobot/nautobot-docker-compose
+# https://hub.docker.com/r/networktocode/nautobot/tags
+# docker-compose --env-file local.env up -d
+# docker-compose logs -t -f
+version: '3.7'
+services:
+
+
+  nautobot-app:
+    image: networktocode/nautobot:${NAUTOBOT_VERSION:-latest}-py${PYTHON_VER:-3.9}
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - 8080:8080
+      - 8443:8443
+    env_file:
+      - "local.env"
+    environment:
+      - NAUTOBOT_CACHEOPS_REDIS=redis://:${NAUTOBOT_REDIS_PASSWORD}@${NAUTOBOT_REDIS_HOST}:${NAUTOBOT_REDIS_PORT}/1
+      - NAUTOBOT_CONFIG=/opt/nautobot/nautobot_config.py
+
+
+  nautobot-worker:
+    image: networktocode/nautobot:${NAUTOBOT_VERSION:-latest}-py${PYTHON_VER:-3.9}
+    restart: unless-stopped
+    entrypoint: nautobot-server rqworker
+    depends_on:
+      - nautobot-app
+    env_file:
+      - "local.env"
+    environment:
+      - NAUTOBOT_CACHEOPS_REDIS=redis://:${NAUTOBOT_REDIS_PASSWORD}@${NAUTOBOT_REDIS_HOST}:${NAUTOBOT_REDIS_PORT}/1
+      - NAUTOBOT_CONFIG=/opt/nautobot/nautobot_config.py
+  
+
+  celery-worker:
+    image: networktocode/nautobot:${NAUTOBOT_VERSION:-latest}-py${PYTHON_VER:-3.9}
+    restart: unless-stopped
+    depends_on:
+      - nautobot-app
+      - redis
+    entrypoint: sh -c 'nautobot-server celery worker -l ${NAUTOBOT_LOG_LEVEL:-WARNING}'
+    healthcheck:
+      interval: 5s
+      timeout: 5s
+      start_period: 5s
+      retries: 3
+      test: [CMD, nautobot-server, health_check]
+    tty: true
+    env_file:
+      - "local.env"
+    environment:
+      - NAUTOBOT_CACHEOPS_REDIS=redis://:${NAUTOBOT_REDIS_PASSWORD}@${NAUTOBOT_REDIS_HOST}:${NAUTOBOT_REDIS_PORT}/1
+      - NAUTOBOT_CONFIG=/opt/nautobot/nautobot_config.py
+
+
+  redis:
+    image: redis:${REDIS_VERSION:-alpine}
+    restart: unless-stopped
+    command:
+      - "sh"
+      - "-c"
+      - "redis-server --appendonly yes --requirepass $$NAUTOBOT_REDIS_PASSWORD"
+    environment:
+      NAUTOBOT_REDIS_PASSWORD: ${NAUTOBOT_REDIS_PASSWORD}
+
+
+  postgres:
+    image: postgres:${POSTGRES_VERSION:-latest}
+    restart: 'unless-stopped'
+    volumes:
+      - ${POSTGRES_VOLUME}:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${NAUTOBOT_DB_NAME}
+      POSTGRES_USER: ${NAUTOBOT_DB_USER}
+      POSTGRES_PASSWORD: ${NAUTOBOT_DB_PASSWORD}
