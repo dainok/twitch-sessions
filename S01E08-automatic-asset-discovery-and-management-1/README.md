@@ -10,6 +10,8 @@ docker-compose --env-file local.env up -d
 docker-compose logs -t -f
 ~~~
 
+Login using the port `8080` using the user `admin` with password `admin`.
+
 In the `nautobot-with-plugins` folder, you can find a configuration example to build a custom Nautobot Docker image including plugins.
 
 ## Installing Snipe IT (docker)
@@ -21,6 +23,8 @@ cd snipeit
 docker-compose --env-file local.env up -d
 docker-compose logs -t -f
 ~~~
+
+Open the port `8090` and complete the setup.
 
 ## Installing RRapp NetDoc (local)
 
