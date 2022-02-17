@@ -26,6 +26,24 @@ docker-compose logs -t -f
 
 Open the port `8090` and complete the setup.
 
+## Installing NetBox (docker)
+
+Review `netbox/*.env` configuration files.
+
+~~~
+git clone https://github.com/netbox-community/netbox-docker
+cd netbox-docker
+cat << EOF > docker-compose.override.yml
+version: '3.4'
+services:
+  netbox:
+    ports:
+      - 8080:8080
+EOF
+docker-compose up -d
+docker-compose logs -t -f
+~~~
+
 ## Installing RRapp NetDoc (local)
 
 Prepare the environment:
